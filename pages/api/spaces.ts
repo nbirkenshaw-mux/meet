@@ -71,6 +71,23 @@ export default async function handler(
         res.status(StatusCodes.UNAUTHORIZED).end();
       }
     }
+  } else if (req.method === "GET") {
+    // Given this is an unsafe operation we only enable it if an envvar is true
+    const spaceListGet = process.env.ENABLE_SPACE_LIST_GET;
+
+    if(spaceListGet && spaceListGet === "true") {
+      try {
+        const spaces = await fetchSpaces();
+        res.status(StatusCodes.OK).json(spaces);
+      } catch (error) {
+        const message = (error as Error).message as string;
+        if (message.includes("401")) {
+          res.status(StatusCodes.UNAUTHORIZED).end();
+        }
+      }
+    } else {
+      res.status(StatusCodes.METHOD_NOT_ALLOWED).end();
+    }
   } else {
     res.status(StatusCodes.METHOD_NOT_ALLOWED).end();
   }
